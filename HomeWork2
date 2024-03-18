@@ -1,0 +1,69 @@
+import subprocess
+FOLDER_TST = "/home/edgar/tst"
+FOLDER_OUT = "/home/edgar/out"
+FOLDER_1 = "/home/edgar/folder1"
+
+
+def checkout(cmd, text):
+    result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, encoding='utf-8')
+    if text in result.stdout and result.returncode == 0:
+        return True
+    else:
+        return False
+
+
+def getout(cmd):
+    return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, encoding='utf-8').stdout
+
+
+def test_step1():
+    # test1
+    res1 = checkout(f"cd {FOLDER_TST}; 7z a {FOLDER_OUT}/arx2", "Everything is Ok")
+    res2 = checkout(f"ls {FOLDER_OUT}", "arx2.7z")
+    assert res1 and res2, "test1 FAIL"
+
+
+def test_step2():
+    # test2
+    res1 = checkout(f"cd {FOLDER_OUT}; 7z e arx2.7z -o{FOLDER_1} -y", "Everything is Ok")
+    res2 = checkout(f"ls {FOLDER_1}", "text1.txt")
+    assert res1 and res2, "test2 FAIL"
+
+
+def test_step3():
+    # test3
+    res1 = checkout(f"cd {FOLDER_1}; 7z l arx2.7z", "")
+    res2 = checkout(f"cd {FOLDER_1}; 7z l arx2.7z", "text1.txt")
+    res3 = checkout(f"cd {FOLDER_1}; 7z l arx2.7z", "text2.txt")
+    assert res1 and res2 and res3, "test3 FAIL"
+
+
+def test_step4():
+    # test4
+    res1 = checkout(f"cd {FOLDER_OUT}; 7z x arx2.7z -o{FOLDER_1} -y", "Everything is Ok")
+    res2 = checkout(f"ls {FOLDER_1}", "text1.txt")
+    res3 = checkout(f"ls {FOLDER_1}", "text2.txt")
+    assert res1 and res2 and res3, "test4 FAIL"
+
+
+def test_step5():
+    # test5
+    res1 = checkout(f"cd {FOLDER_TST}; 7z h arx2.7z", "Everything is Ok")
+    hash = getout(f"cd {FOLDER_TST}; crc32 arx2.7z").upper()
+    res2 = checkout(f"cd {FOLDER_TST}; 7z h arx2.7z", hash)
+    assert res1 and res2, "test5 FAIL"
+
+
+def test_step6():
+    # test6
+    assert checkout(f"cd {FOLDER_OUT}; 7z t arx2.7z", "Everything is Ok"), "test6 FAIL"
+
+
+def test_step7():
+    # test7
+    assert checkout(f"cd {FOLDER_TST}; 7z u arx2.7z", "Everything is Ok"), "test7 FAIL"
+
+
+def test_step8():
+    # test8
+    assert checkout(f"cd {FOLDER_OUT}; 7z d arx2.7z", "Everything is Ok"), "test8 FAIL"
